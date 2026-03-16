@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Google AI Studio App</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script type="module">
+    // Page refresh par history clear karna taake leads dobara puchi jayein
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('chatflow_') || key.startsWith('flowise_')) {
+        localStorage.removeItem(key);
+      }
+    });
+
+    import Chatbot from "https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+    Chatbot.init({
+      chatflowid: "3bd2dfc4-f3c6-45a3-804d-1b0939a3f4da",
+      apiHost: "https://cloud.flowiseai.com",
+      chatflowConfig: {
+        "leads": {
+          "status": true,
+          "title": "Welcome to DentaCare",
+          "name": true,
+          "email": true,
+          "phone": true,
+          "successMessage": "Thank you! Our assistant will help you right away."
+        }
+      },
+      theme: {
+        button: {
+          backgroundColor: "#1a73e8",
+          right: 20,
+          bottom: 20,
+          size: 56,
+          iconColor: "white"
+        },
+        chatWindow: {
+          welcomeMessage: "Assalam o Alaikum! DentaCare Clinic mein khush amdeed!",
+          title: "DentaCare Assistant",
+          backgroundColor: "#ffffff",
+          showClearChatButton: true,
+          poweredByTextColor: "#ffffff",
+          botMessage: {
+            backgroundColor: "#f0f4ff",
+            textColor: "#1e293b"
+          },
+          userMessage: {
+            backgroundColor: "#1a73e8",
+            textColor: "#ffffff"
+          }
+        }
+      }
+    })
+  </script>
+</body>
+
+</html>
