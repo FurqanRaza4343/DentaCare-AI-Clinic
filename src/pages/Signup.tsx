@@ -20,30 +20,36 @@ export default function Signup() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Mock Signup logic with localStorage
+      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
       
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        throw new Error('Server returned an invalid response');
+      if (users.find((u: any) => u.email === formData.email)) {
+        setError('Email already exists');
+        setLoading(false);
+        return;
       }
 
-      if (res.ok) {
-        if (!data.token || !data.user) {
-          throw new Error('Invalid response from server');
-        }
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        navigate('/dashboard');
-      } else {
-        setError(data.error || 'Signup failed');
-      }
-    } catch (err) {
+      const newUser = {
+        id: Date.now(),
+        ...formData,
+        age: null,
+        gender: null,
+        image: null
+      };
+
+      users.push(newUser);
+      localStorage.setItem('mock_users', JSON.stringify(users));
+      
+      const token = 'mock-jwt-token-' + newUser.id;
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(newUser));
+      
+      navigate('/dashboard');
+    } catch (err: any) {
+      console.error('Signup error:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);

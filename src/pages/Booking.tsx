@@ -38,21 +38,41 @@ export default function Booking() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [docsRes, meRes] = await Promise.all([
-          fetch('/api/doctors'),
-          fetch('/api/me', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-          })
-        ]);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        const docsData = await docsRes.json();
-        const meData = await meRes.json();
+        // Use the same doctors list as the Doctors page
+        const mockDoctors: Doctor[] = [
+          {
+            id: 1,
+            name: "Dr Ahmed Khan",
+            specialization: "Orthodontist",
+            timings: "10AM - 3PM",
+            image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=800"
+          },
+          {
+            id: 2,
+            name: "Dr Sarah Malik",
+            specialization: "Dental Surgeon",
+            timings: "3PM - 8PM",
+            image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=800"
+          },
+          {
+            id: 3,
+            name: "Dr Ali Raza",
+            specialization: "Implant Specialist",
+            timings: "6PM - 10PM",
+            image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=800"
+          }
+        ];
 
-        setDoctors(docsData);
-        setFormData(prev => ({ ...prev, confirmation_email: meData.email || '' }));
-        setLoading(false);
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        setDoctors(mockDoctors);
+        setFormData(prev => ({ ...prev, confirmation_email: storedUser.email || '' }));
       } catch (err) {
         console.error(err);
+      } finally {
         setLoading(false);
       }
     };
@@ -90,32 +110,39 @@ export default function Booking() {
     e.preventDefault();
     setSubmitting(true);
 
-    const finalData = {
-      ...formData,
-      service: selectedServices.join(', '),
-      payment_details: formData.payment_method === 'online'
-        ? (onlineMethod === 'wallet'
-          ? `${walletType}: ${formData.payment_details}`
-          : `${bankType}: ${formData.payment_details}`)
-        : 'Onsite Payment'
-    };
-
     try {
-      const res = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(finalData),
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-      if (res.ok) {
-        setSuccess(true);
-        setTimeout(() => navigate('/dashboard'), 4000);
-      }
+      const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const selectedDoctor = doctors.find(d => d.id.toString() === formData.doctor_id);
+
+      const newAppointment = {
+        id: Date.now(),
+        user_id: storedUser.id,
+        doctor_id: parseInt(formData.doctor_id),
+        doctor_name: selectedDoctor?.name || 'Unknown',
+        service: selectedServices.join(', '),
+        appointment_date: formData.appointment_date,
+        appointment_time: formData.appointment_time,
+        status: 'scheduled',
+        created_at: new Date().toISOString(),
+        payment_details: formData.payment_method === 'online'
+          ? (onlineMethod === 'wallet'
+            ? `${walletType}: ${formData.payment_details}`
+            : `${bankType}: ${formData.payment_details}`)
+          : 'Onsite Payment'
+      };
+
+      const appointments = JSON.parse(localStorage.getItem('mock_appointments') || '[]');
+      appointments.push(newAppointment);
+      localStorage.setItem('mock_appointments', JSON.stringify(appointments));
+
+      setSuccess(true);
+      setTimeout(() => navigate('/dashboard'), 4000);
     } catch (err) {
       console.error(err);
+      alert('Failed to book appointment. Please try again.');
     } finally {
       setSubmitting(false);
     }

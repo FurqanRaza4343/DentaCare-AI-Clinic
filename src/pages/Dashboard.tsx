@@ -46,31 +46,25 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const [userRes, ApptsRes] = await Promise.all([
-          fetch('/api/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch('/api/appointments/me', {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 800));
 
-        if (userRes.ok && ApptsRes.ok) {
-          const userData = await userRes.json();
-          const apptsData = await ApptsRes.json();
-          
-          setUser(userData);
-          setAppointments(apptsData);
-          setEditForm({
-            name: userData.name || '',
-            email: userData.email || '',
-            phone: userData.phone || '',
-            age: userData.age || '',
-            gender: userData.gender || '',
-            image: userData.image || ''
-          });
-        }
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const appointments = JSON.parse(localStorage.getItem('mock_appointments') || '[]');
+        
+        // Filter appointments for the current user
+        const userAppointments = appointments.filter((a: any) => a.user_id === storedUser.id);
+        
+        setUser(storedUser);
+        setAppointments(userAppointments);
+        setEditForm({
+          name: storedUser.name || '',
+          email: storedUser.email || '',
+          phone: storedUser.phone || '',
+          age: storedUser.age || '',
+          gender: storedUser.gender || '',
+          image: storedUser.image || ''
+        });
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -85,22 +79,21 @@ export default function Dashboard() {
     e.preventDefault();
     setUpdatingProfile(true);
     try {
-      const response = await fetch('/api/update-profile', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify(editForm)
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (response.ok) {
-        const updatedUser = await response.json();
-        setUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        setIsEditModalOpen(false);
-        alert('Profile updated successfully!');
-      }
+      const updatedUser = { ...user, ...editForm };
+      
+      // Update in mock_users
+      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      const updatedUsers = users.map((u: any) => u.id === user.id ? updatedUser : u);
+      localStorage.setItem('mock_users', JSON.stringify(updatedUsers));
+      
+      // Update current user
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      setUser(updatedUser);
+      setIsEditModalOpen(false);
+      alert('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
       alert('Failed to update profile.');
@@ -113,17 +106,15 @@ export default function Dashboard() {
     if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
 
     try {
-      const response = await fetch(`/api/appointments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      if (response.ok) {
-        setAppointments(appointments.filter(a => a.id !== id));
-        alert('Appointment cancelled successfully.');
-      }
+      const allAppointments = JSON.parse(localStorage.getItem('mock_appointments') || '[]');
+      const filteredAppointments = allAppointments.filter((a: any) => a.id !== id);
+      localStorage.setItem('mock_appointments', JSON.stringify(filteredAppointments));
+
+      setAppointments(appointments.filter(a => a.id !== id));
+      alert('Appointment cancelled successfully.');
     } catch (error) {
       console.error('Error cancelling appointment:', error);
     }

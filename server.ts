@@ -211,45 +211,52 @@ async function startServer() {
 
   app.post("/api/auth/signup", async (req, res) => {
     const { name, email, password, phone } = req.body;
-    console.log("Signup attempt for:", email);
+    console.log("Signup attempt for:", email, "Body:", req.body);
 
     if (!name || !email || !password) {
+      console.warn("Signup failed: Missing required fields");
       return res.status(400).json({ error: "Missing required fields" });
     }
 
     try {
+      console.log("Hashing password...");
       const hashedPassword = await bcrypt.hash(password, 10);
+      console.log("Inserting user into DB...");
       const stmt = db.prepare("INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)");
       const result = stmt.run(name, email, hashedPassword, phone);
       const userId = Number(result.lastInsertRowid);
+      console.log("User inserted with ID:", userId);
       const token = jwt.sign({ id: userId, email, name }, JWT_SECRET);
-      console.log("Signup successful for:", email, "ID:", userId);
+      console.log("Signup successful for:", email);
       res.json({ token, user: { id: userId, name, email, phone, age: null, gender: null, image: null } });
     } catch (error: any) {
       console.error("Signup error details:", error);
       if (error.message.includes("UNIQUE constraint failed")) {
         res.status(400).json({ error: "Email already exists" });
       } else {
-        res.status(500).json({ error: "Internal server error during signup" });
+        res.status(500).json({ error: "Internal server error during signup: " + error.message });
       }
     }
   });
 
   app.post("/api/auth/login", async (req, res) => {
     const { email, password } = req.body;
-    console.log("Login attempt for:", email);
+    console.log("Login attempt for:", email, "Body:", req.body);
 
     if (!email || !password) {
+      console.warn("Login failed: Email and password are required");
       return res.status(400).json({ error: "Email and password are required" });
     }
 
     try {
+      console.log("Finding user in DB...");
       const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email) as any;
       if (!user) {
         console.log("Login failed: User not found ->", email);
         return res.status(400).json({ error: "Invalid email or password" });
       }
 
+      console.log("Comparing passwords...");
       const validPassword = await bcrypt.compare(password, user.password);
       if (!validPassword) {
         console.log("Login failed: Invalid password for ->", email);
@@ -260,9 +267,9 @@ async function startServer() {
       const token = jwt.sign({ id: userId, email: user.email, name: user.name }, JWT_SECRET);
       console.log("Login successful for:", email, "ID:", userId);
       res.json({ token, user: { id: userId, name: user.name, email: user.email, phone: user.phone, age: user.age, gender: user.gender, image: user.image } });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error details:", error);
-      res.status(500).json({ error: "Internal server error during login" });
+      res.status(500).json({ error: "Internal server error during login: " + error.message });
     }
   });
 

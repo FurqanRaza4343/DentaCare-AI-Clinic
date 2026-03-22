@@ -16,30 +16,23 @@ export default function Login() {
     setError('');
 
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      
-      let data;
-      try {
-        data = await res.json();
-      } catch (e) {
-        throw new Error('Server returned an invalid response');
-      }
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      if (res.ok) {
-        if (!data.token || !data.user) {
-          throw new Error('Invalid response from server');
-        }
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+      // Mock Login logic with localStorage
+      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      const user = users.find((u: any) => u.email === email && u.password === password);
+
+      if (user) {
+        const token = 'mock-jwt-token-' + user.id;
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(user));
         navigate('/dashboard');
       } else {
-        setError(data.error || 'Login failed');
+        setError('Invalid email or password');
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Login error:', err);
       setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
