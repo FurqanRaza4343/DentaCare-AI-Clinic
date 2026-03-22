@@ -13,7 +13,6 @@ export default function Navbar() {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
-
     // Sync user state from localStorage on route change
     const storedUser = localStorage.getItem('user');
     if (storedUser && storedUser !== 'undefined') {

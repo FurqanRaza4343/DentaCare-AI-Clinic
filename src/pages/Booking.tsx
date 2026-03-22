@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SERVICES, PACKAGES, EMERGENCY_CONTACT } from '../constants';
 import { Doctor } from '../types';
 import { Calendar as CalendarIcon, Clock, User, CheckCircle, Loader2, AlertCircle, ArrowRight, Wallet, CreditCard, Camera, ArrowLeft, Mail, Sparkles, ShieldCheck, Trash2 } from 'lucide-react';
@@ -28,7 +28,7 @@ export default function Booking() {
   });
 
   const [onlineMethod, setOnlineMethod] = useState<'wallet' | 'bank' | null>(null);
-  const [walletType, setWalletType] = useState<'easypaisa' | 'jazzcash' | null>(null);
+  const [walletType, setWalletType] = useState<string>('');
   const [bankType, setBankType] = useState<string>('');
 
   useEffect(() => {
@@ -257,7 +257,6 @@ export default function Booking() {
                     )}
                   </div>
 
-                  {/* Doctor Selection */}
                   <div className="space-y-8">
                     <label className="text-2xl font-display font-bold text-slate-900 flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
@@ -276,9 +275,9 @@ export default function Booking() {
                         >
                           <input
                             type="radio"
-                            name="doctor"
                             className="sr-only"
-                            required
+                            name="doctor"
+                            checked={formData.doctor_id === doctor.id.toString()}
                             onChange={() => setFormData({ ...formData, doctor_id: doctor.id.toString() })}
                           />
                           <div className="text-center">
@@ -352,56 +351,61 @@ export default function Booking() {
                   <div className="space-y-8">
                     <label className="text-2xl font-display font-bold text-slate-900 flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center">
-                        <Wallet size={24} />
+                        <CreditCard size={24} />
                       </div>
-                      5. Billing Preference
+                      Billing Preference
                     </label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                      <label className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 ${formData.payment_method === 'onsite' ? 'border-primary-500 bg-primary-50 shadow-lg' : 'border-slate-100 bg-slate-50/50 hover:bg-white'}`}>
-                        <input type="radio" name="pay" className="sr-only" onChange={() => setFormData({ ...formData, payment_method: 'onsite' })} checked={formData.payment_method === 'onsite'} />
-                        <div className="flex flex-col items-center text-center gap-5">
-                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-primary-600 shadow-sm transition-transform group-hover:scale-110">
-                            <User size={32} />
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 text-xl block mb-2">Onsite Settlement</span>
-                            <p className="text-xs text-slate-500 leading-relaxed font-medium">Finalize your payment at the <br />executive lounge on arrival.</p>
-                          </div>
-                        </div>
-                      </label>
-                      <label className={`p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 ${formData.payment_method === 'online' ? 'border-primary-500 bg-primary-50 shadow-lg' : 'border-slate-100 bg-slate-50/50 hover:bg-white'}`}>
-                        <input type="radio" name="pay" className="sr-only" onChange={() => setFormData({ ...formData, payment_method: 'online' })} checked={formData.payment_method === 'online'} />
-                        <div className="flex flex-col items-center text-center gap-5">
-                          <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-primary-600 shadow-sm transition-transform group-hover:scale-110">
-                            <CreditCard size={32} />
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 text-xl block mb-2">Instant Digital Pay</span>
-                            <p className="text-xs text-slate-500 leading-relaxed font-medium">Fast-track your visit via <br />Easypaisa, JazzCash or Bank.</p>
-                          </div>
-                        </div>
-                      </label>
-                    </div>
-                  </div>
 
-                  <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white flex items-start gap-6 shadow-2xl relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/20 rounded-full blur-3xl" />
-                    <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-primary-400 shrink-0 backdrop-blur-md">
-                      <Mail size={24} />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {[
+                        { id: 'onsite', label: 'Onsite Arrival', sub: 'Pay at Reception', icon: ShieldCheck },
+                        { id: 'online', label: 'Digital Transfer', sub: 'Instant Verification', icon: Wallet }
+                      ].map((method) => (
+                        <label
+                          key={method.id}
+                          className={`relative p-8 rounded-[2.5rem] border-2 cursor-pointer transition-all duration-300 ${formData.payment_method === method.id
+                            ? 'border-primary-500 bg-primary-50/50 shadow-lg'
+                            : 'border-slate-100 bg-slate-50/30 hover:bg-white hover:border-slate-200'
+                            }`}
+                        >
+                          <input
+                            type="radio"
+                            className="sr-only"
+                            name="payment_method"
+                            value={method.id}
+                            checked={formData.payment_method === method.id}
+                            onChange={(e) => setFormData({ ...formData, payment_method: e.target.value })}
+                          />
+                          <method.icon className={`mb-4 ${formData.payment_method === method.id ? 'text-primary-600' : 'text-slate-400'}`} size={32} />
+                          <p className="font-bold text-slate-900 text-xl mb-1">{method.label}</p>
+                          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{method.sub}</p>
+                        </label>
+                      ))}
                     </div>
-                    <div>
-                      <p className="text-xl font-display font-bold mb-2">Digital Token Transmission</p>
-                      <p className="text-slate-400 font-medium leading-relaxed">
-                        {formData.payment_method === 'onsite'
-                          ? "We'll dispatch a secure confirmation token. Present the digital email receipt at our executive reception."
-                          : "Instructions for your digital wire transfer will be dispatched instantly. Your priority status will be activated upon data receipt."
-                        }
-                      </p>
+
+                    <div className="p-8 bg-slate-900 rounded-[2.5rem] text-white flex items-start gap-6 shadow-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-primary-500/20 rounded-full blur-3xl" />
+                      <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center text-primary-400 shrink-0 backdrop-blur-md">
+                        <Mail size={24} />
+                      </div>
+                      <div>
+                        <p className="text-xl font-display font-bold mb-2">Digital Token Transmission</p>
+                        <p className="text-slate-400 font-medium leading-relaxed">
+                          {formData.payment_method === 'onsite'
+                            ? "We'll dispatch a secure confirmation token. Present the digital email receipt at our executive reception."
+                            : "Instructions for your digital wire transfer will be dispatched instantly. Your priority status will be activated upon data receipt."
+                          }
+                        </p>
+                      </div>
                     </div>
                   </div>
 
                   {formData.payment_method === 'online' && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 p-10 glass-card bg-slate-50/50 rounded-[3rem] border-slate-200">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-8 p-10 glass-card bg-slate-50/50 rounded-[3rem] border-slate-200"
+                    >
                       <div className="flex gap-5">
                         <button
                           type="button"

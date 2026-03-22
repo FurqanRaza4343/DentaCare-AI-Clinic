@@ -7,14 +7,51 @@ import { Link } from 'react-router-dom';
 export default function Doctors() {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDoctors = async () => {
+    try {
+      setError(null);
+      const res = await fetch('/api/doctors');
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      setDoctors(data);
+    } catch (e) {
+      // Fallback data taake UI blank na rahe
+      const fallback: Doctor[] = [
+        {
+          id: 1,
+          name: "Dr Ahmed Khan",
+          specialization: "Orthodontist",
+          timings: "10AM - 3PM",
+          image: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 2,
+          name: "Dr Sarah Malik",
+          specialization: "Dental Surgeon",
+          timings: "3PM - 8PM",
+          image: "https://images.unsplash.com/photo-1594824476967-48c8b964273f?auto=format&fit=crop&q=80&w=800"
+        },
+        {
+          id: 3,
+          name: "Dr Ali Raza",
+          specialization: "Implant Specialist",
+          timings: "6PM - 10PM",
+          image: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&q=80&w=800"
+        }
+      ];
+      setDoctors(fallback);
+      setError('Live server say data nahi aaya; abhi temporary list dikhayi ja rahi hai.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetch('/api/doctors')
-      .then(res => res.json())
-      .then(data => {
-        setDoctors(data);
-        setLoading(false);
-      });
+    fetchDoctors();
   }, []);
 
   return (
@@ -39,9 +76,24 @@ export default function Doctors() {
           <div className="flex justify-center items-center h-64">
             <div className="w-20 h-20 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
           </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-64 gap-4">
+            <div className="text-slate-600 text-center">{error}</div>
+            <button
+              onClick={() => {
+                setLoading(true);
+                fetchDoctors();
+              }}
+              className="px-6 py-3 bg-primary-600 text-white rounded-2xl font-semibold hover:bg-primary-700 transition-colors"
+            >
+              Dobara Koshish Karein
+            </button>
+          </div>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-12">
-            {doctors.map((doctor, i) => (
+            {doctors.length === 0 ? (
+              <div className="col-span-full text-center text-slate-500">Is waqt doctors ki list khali hai.</div>
+            ) : doctors.map((doctor, i) => (
               <motion.div
                 key={doctor.id}
                 initial={{ opacity: 0, y: 30 }}

@@ -1,88 +1,91 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { Appointment, User } from '../types';
-import { Calendar, Clock, User as UserIcon, Phone, Mail, ChevronRight, CheckCircle, Clock3, AlertCircle, Trash2, LogOut, Eye, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
+import { 
+  Calendar, 
+  Clock as Clock3, 
+  User as UserIcon, 
+  Mail, 
+  Phone, 
+  LogOut, 
+  CheckCircle, 
+  AlertCircle, 
+  ChevronRight,
+  Eye,
+  Trash2,
+  X
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+interface Appointment {
+  id: number;
+  doctor_name: string;
+  service: string;
+  appointment_date: string;
+  appointment_time: string;
+  status: string;
+  payment_screenshot?: string;
+}
 
 export default function Dashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<User>(JSON.parse(localStorage.getItem('user') || '{}'));
+  const [user, setUser] = useState<any>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [updatingProfile, setUpdatingProfile] = useState(false);
   const [editForm, setEditForm] = useState({
-    name: user.name || '',
-    phone: user.phone || '',
-    age: user.age || '',
-    gender: user.gender || '',
-    image: user.image || ''
+    name: '',
+    email: '',
+    phone: '',
+    age: '',
+    gender: '',
+    image: ''
   });
+  const [updatingProfile, setUpdatingProfile] = useState(false);
   const [viewingScreenshot, setViewingScreenshot] = useState<string | null>(null);
 
-  const fetchAppointments = () => {
-    setLoading(true);
-    fetch('/api/appointments', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(res => {
-        if (res.status === 401) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          window.location.href = '/login';
-          return;
-        }
-        return res.json();
-      })
-      .then(data => {
-        if (data) {
-          setAppointments(data);
-        }
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Fetch error:', err);
-        setLoading(false);
-      });
-  };
-
   useEffect(() => {
-    fetchAppointments();
-  }, []);
+    const fetchDashboardData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const [userRes, ApptsRes] = await Promise.all([
+          fetch('/api/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          }),
+          fetch('/api/appointments/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          })
+        ]);
 
-  const handleCancel = async (id: number) => {
-    console.log('Cancelling appointment:', id);
-    if (!window.confirm('Do you really want to delete this appointment?')) return;
-
-    try {
-      const res = await fetch(`/api/appointments/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
+        if (userRes.ok && ApptsRes.ok) {
+          const userData = await userRes.json();
+          const apptsData = await ApptsRes.json();
+          
+          setUser(userData);
+          setAppointments(apptsData);
+          setEditForm({
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            age: userData.age || '',
+            gender: userData.gender || '',
+            image: userData.image || ''
+          });
         }
-      });
-
-      const data = await res.json();
-      console.log('Delete response:', data);
-
-      if (res.ok) {
-        fetchAppointments();
-      } else {
-        alert(data.error || 'Failed to cancel appointment');
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error('Delete error:', err);
-      alert('Error cancelling appointment');
-    }
-  };
+    };
+
+    fetchDashboardData();
+  }, []);
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setUpdatingProfile(true);
-
     try {
-      const res = await fetch('/api/me', {
+      const response = await fetch('/api/update-profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -91,21 +94,42 @@ export default function Dashboard() {
         body: JSON.stringify(editForm)
       });
 
-      if (res.ok) {
-        const updatedUser = await res.json();
+      if (response.ok) {
+        const updatedUser = await response.json();
         setUser(updatedUser);
         localStorage.setItem('user', JSON.stringify(updatedUser));
         setIsEditModalOpen(false);
-      } else {
-        alert('Failed to update profile');
+        alert('Profile updated successfully!');
       }
-    } catch (err) {
-      console.error('Update error:', err);
-      alert('Error updating profile');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('Failed to update profile.');
     } finally {
       setUpdatingProfile(false);
     }
   };
+
+  const handleCancel = async (id: number) => {
+    if (!window.confirm('Are you sure you want to cancel this appointment?')) return;
+
+    try {
+      const response = await fetch(`/api/appointments/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (response.ok) {
+        setAppointments(appointments.filter(a => a.id !== id));
+        alert('Appointment cancelled successfully.');
+      }
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+    }
+  };
+
+  if (!user) return null;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

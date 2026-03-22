@@ -126,7 +126,6 @@ async function startServer() {
       if (!accessToken) {
         throw new Error("Failed to retrieve access token");
       }
-
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -224,7 +223,6 @@ async function startServer() {
       const result = stmt.run(name, email, hashedPassword, phone);
       const userId = Number(result.lastInsertRowid);
       const token = jwt.sign({ id: userId, email, name }, JWT_SECRET);
-
       console.log("Signup successful for:", email, "ID:", userId);
       res.json({ token, user: { id: userId, name, email, phone, age: null, gender: null, image: null } });
     } catch (error: any) {
@@ -260,7 +258,6 @@ async function startServer() {
 
       const userId = Number(user.id);
       const token = jwt.sign({ id: userId, email: user.email, name: user.name }, JWT_SECRET);
-
       console.log("Login successful for:", email, "ID:", userId);
       res.json({ token, user: { id: userId, name: user.name, email: user.email, phone: user.phone, age: user.age, gender: user.gender, image: user.image } });
     } catch (error) {
@@ -357,7 +354,6 @@ async function startServer() {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `);
     const result = stmt.run(req.user.id, doctor_id, service, appointment_date, appointment_time, payment_method, payment_details, payment_screenshot);
-
     // Send Confirmation Email
     let emailToSend = confirmation_email;
     if (!emailToSend) {

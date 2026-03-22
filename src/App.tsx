@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 
+
 // Pages
 import Home from './pages/Home';
 import Services from './pages/Services';
