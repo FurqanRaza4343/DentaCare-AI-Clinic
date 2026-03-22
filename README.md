@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
@@ -22,3 +23,6 @@ View your app in AI Studio: https://ai.studio/apps/7bd2735b-41cd-4884-a2cc-681c8
 =======
 
 >>>>>>> c694802f28daaffbded38afb7a49240216dc6203
+=======
+# AI Clinic (Denta Care)
+>>>>>>> 6fa1b91e5c783b4b6d14954d88c291085b88648c
