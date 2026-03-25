@@ -142,4 +142,4 @@ https://www.linkedin.com/posts/furqan-raza-879504351_aiautomation-dentalai-healt
 
 ## 📩 Want This For Your Clinic?
 
-DM me on LinkedIn if you want a system like this built for your business.
+DM me on LinkedIn if you want a system like this built for your business
